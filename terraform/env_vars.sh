@@ -4,6 +4,10 @@
 # vault
 echo -n "Enter your vault token and press [ENTER]: "
 read VAULT_TOKEN
+echo -n "Enter your bigip username and press [ENTER]: "
+read BIGIP_ADMIN
+echo -n "Enter your bigip password and press [ENTER]: "
+read BIGIP_PASS
 
 vaultHost='http://vault.f5lab.internal:30000'
 # aws
@@ -33,12 +37,42 @@ data=$(cat -<<EOF
 }
 EOF
 )
+bigip=$(cat -<<EOF
+{
+  "data": {
+      "admin": "${BIGIP_ADMIN}",
+      "pass": "${BIGIP_PASS}"
+    }
+}
+EOF
+)
+PUBLIC_KEY=$(cat /home/ubuntu/user.pub)
+pubKey=$(cat -<<EOF
+{
+  "data": {
+      "key": "${PUBLIC_KEY}"
+    }
+}
+EOF
+)
+/home/ubuntu/user.pub
 # vault store data
-curl -s \
+curl  \
     --header "X-Vault-Token: $VAULT_TOKEN" \
     --request POST \
     --data "$data" \
     $vaultHost/v1/secret/data/aws
+curl  \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request POST \
+    --data "$bigip" \
+    $vaultHost/v1/secret/data/bigip
+curl  \
+    --header "X-Vault-Token: $VAULT_TOKEN" \
+    --request POST \
+    --data "$pubKey" \
+    $vaultHost/v1/secret/data/aws_key
+  
 # read vault data
 # curl -s \
 # --header "X-Vault-Token: $VAULT_TOKEN" \
